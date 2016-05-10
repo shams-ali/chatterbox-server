@@ -12,6 +12,11 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
+var q = require('querystring');
+var utils = require('util');
+
+var body = {results: [] };
+
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -27,33 +32,50 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
+  // var method = request.method, url = request.url;
+
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
   // The outgoing status.
   var statusCode = 200;
 
-  // See the note below about CORS headers.
+
+
+  if (request.method === 'POST') {
+    statusCode = 201;
+  } else if (request.url !== '/classes/messages') {
+    statusCode = 404;
+  }
+
   var headers = defaultCorsHeaders;
 
-  // Tell the client we are sending them plain text.
-  //
-  // You will need to change this if you are sending something
-  // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
+  headers['Content-Type'] = 'application/json';
+
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
   response.writeHead(statusCode, headers);
+  
+  if (request.method === 'GET') {
+    console.log(statusCode, 'status');
+    response.end(JSON.stringify(body));  
+  } else if (request.method === 'POST') {
+    var full = '';
 
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
-  response.end('Hello, World!');
+    request.on('data', (chunk) => {
+      full += chunk.toString();
+      body.results.push(JSON.parse(full));
+    });
+    request.on('end', () => {
+      response.end(JSON.stringify(body));
+    });
+  } 
+
+
+
 };
+
+exports.requestHandler = requestHandler;
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
