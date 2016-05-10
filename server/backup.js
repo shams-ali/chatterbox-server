@@ -23,33 +23,38 @@ var requestHandler = function(request, response) {
   var url = request.url;
   var headers = defaultCorsHeaders;
   headers['Content-Type'] = 'application/json';
-  var statusCode = 200;
 
   console.log('Serving request type ' + method + ' for url ' + url);
 
   // The outgoing status.
-  console.log(request.data, 'request');
+  var statusCode = 200;
 
-  if (url.substr(0, 17) !== '/classes/messages' && url.substr(0, 13) !== '/classes/room') {
+  if (request.method === 'POST') {
+    statusCode = 201;
+  } else if (request.url !== '/classes/messages') {
     statusCode = 404;
-  } else {
-    if (method === 'POST') {
-      statusCode = 201;
-      request.on('data', (chunk) => {
-        var fullString = '';
-        fullString += chunk.toString();
-        body.results.unshift(JSON.parse(fullString));
-        console.log(body, '$$$$$$$$$$$$$$$$$$$$$$$$$$$');
-      });
-      request.on('end', () => { 
-        response.writeHead(statusCode, headers);
-        response.end(JSON.stringify(body));
-      });
-    }
   }
 
+  // .writeHead() writes to the request line and headers of the response,
+  // which includes the status and all headers.
   response.writeHead(statusCode, headers);
-  response.end(JSON.stringify(body));
+  
+  if (request.method === 'GET') {
+    console.log(statusCode, 'status');
+    response.end(JSON.stringify(body));  
+  } else if (request.method === 'POST') {
+    var full = '';
+
+    request.on('data', (chunk) => {
+      full += chunk.toString();
+      body.results.push(JSON.parse(full));
+    });
+    request.on('end', () => {
+      response.end(JSON.stringify(body));
+    });
+  } 
+
+
 };
 
 exports.requestHandler = requestHandler;
@@ -69,6 +74,8 @@ var defaultCorsHeaders = {
   'access-control-allow-headers': 'content-type, accept',
   'access-control-max-age': 10 // Seconds.
 };
+
+module.exports = requestHandler;
 
 /*************************************************************
 

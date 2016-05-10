@@ -6,7 +6,7 @@ var app = {
   //to all messages sent by the user
   server: 'http://127.0.0.1:3000/classes/messages',
   username: 'anonymous',
-  roomname: 'lobby',
+  roomname: 'Lobby',
   lastMessageId: 0,
   friends: {},
 
@@ -26,7 +26,7 @@ var app = {
     app.$roomSelect.on('change', app.saveRoom);
 
     // Fetch previous messages
-    app.startSpinner();
+    // app.startSpinner();
     app.fetch(false);
 
     // Poll for new messages
@@ -34,7 +34,7 @@ var app = {
   },
 
   send: function(data) {
-    app.startSpinner();
+    // app.startSpinner();
     // Clear messages input
     app.$message.val('');
 
@@ -46,6 +46,7 @@ var app = {
       contentType: 'application/json',
       success: function (data) {
         // Trigger a fetch to update the messages, pass true to animate
+        console.log('succes posting', data);
         app.fetch();
       },
       error: function (data) {
@@ -69,16 +70,16 @@ var app = {
         var displayedRoom = $('.chat span').first().data('roomname');
         app.stopSpinner();
         // Only bother updating the DOM if we have a new message
-        if (mostRecentMessage.objectId !== app.lastMessageId || app.roomname !== displayedRoom) {
+        //if (mostRecentMessage.objectId !== app.lastMessageId || app.roomname !== displayedRoom) {
           // Update the UI with the fetched rooms
-          app.populateRooms(data.results);
+        app.populateRooms(data.results);
 
           // Update the UI with the fetched messages
-          app.populateMessages(data.results, animate);
+        app.populateMessages(data.results, animate);
 
           // Store the ID of the most recent message
-          app.lastMessageId = mostRecentMessage.objectId;
-        }
+        app.lastMessageId = mostRecentMessage.objectId;
+        //}
       },
       error: function(data) {
         console.error('chatterbox: Failed to fetch messages');
@@ -94,7 +95,7 @@ var app = {
     // Clear existing messages
 
     app.clearMessages();
-    app.stopSpinner();
+    // app.stopSpinner();
     if (Array.isArray(results)) {
       // Add all fetched messages
       results.forEach(app.addMessage);
@@ -142,7 +143,7 @@ var app = {
 
   addMessage: function(data) {
     if (!data.roomname) {
-      data.roomname = 'lobby';
+      data.roomname = 'Lobby';
     }
 
     // Only add messages that are in our current room
@@ -202,7 +203,7 @@ var app = {
         app.fetch();
       }
     } else {
-      app.startSpinner();
+      // app.startSpinner();
       // Store as undefined for empty names
       app.roomname = app.$roomSelect.val();
 
@@ -215,7 +216,7 @@ var app = {
     var message = {
       username: app.username,
       text: app.$message.val(),
-      roomname: app.roomname || 'lobby'
+      roomname: app.roomname || 'Lobby'
     };
 
     app.send(message);
