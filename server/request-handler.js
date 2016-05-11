@@ -13,24 +13,37 @@
 // **************************************************************/
 
 var q = require('querystring');
-var utils = require('util');
-
+var id = require('mongodb').ObjectID;
+var path = require('path');
+var URL = require('url');
+var fs = require('fs');
 var body = {results: [] };
 
 var requestHandler = function(request, response) {
-
   var method = request.method;
-  var url = request.url;
+  var parsedURL = URL.parse(request.url);
+
+  if (request.url === '/') {
+    var filename = __dirname + ('/public/index.html');
+  } else {
+    filename = __dirname + ('/public' + parsedURL.pathname);
+  }
+  
+  fs.readFile(filename, (err, data) => {
+    if (err) {
+      response.writeHead(404, headers);
+      response.end();
+    }
+    response.writeHead(200);
+    response.end(data);
+  });
+
   var headers = defaultCorsHeaders;
+  
   headers['Content-Type'] = 'application/json';
   var statusCode = 200;
 
-  console.log('Serving request type ' + method + ' for url ' + url);
-
-  // The outgoing status.
-  console.log(request.data, 'request');
-
-  if (url.substr(0, 17) !== '/classes/messages' && url.substr(0, 13) !== '/classes/room') {
+  if (parsedURL.pathname !== '/classes/messages' && parsedURL.pathname !== '/classes/room') {
     statusCode = 404;
   } else {
     if (method === 'POST') {
@@ -38,18 +51,19 @@ var requestHandler = function(request, response) {
       request.on('data', (chunk) => {
         var fullString = '';
         fullString += chunk.toString();
-        body.results.unshift(JSON.parse(fullString));
-        console.log(body, '$$$$$$$$$$$$$$$$$$$$$$$$$$$');
+        var parsed = JSON.parse(fullString);
+        parsed.objectId = id();
+        body.results.unshift(parsed);
       });
       request.on('end', () => { 
         response.writeHead(statusCode, headers);
         response.end(JSON.stringify(body));
       });
     }
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(body));
   }
 
-  response.writeHead(statusCode, headers);
-  response.end(JSON.stringify(body));
 };
 
 exports.requestHandler = requestHandler;
