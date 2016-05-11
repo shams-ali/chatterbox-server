@@ -17,7 +17,8 @@ var id = require('mongodb').ObjectID;
 var path = require('path');
 var URL = require('url');
 var fs = require('fs');
-var body = {results: [] };
+
+//var body = {results: [] }; //set body equal to old messages object, --> pull that data out
 
 var requestHandler = function(request, response) {
   var method = request.method;
@@ -28,7 +29,7 @@ var requestHandler = function(request, response) {
   } else {
     filename = __dirname + ('/public' + parsedURL.pathname);
   }
-  
+
   fs.readFile(filename, (err, data) => {
     if (err) {
       response.writeHead(404, headers);
@@ -46,22 +47,27 @@ var requestHandler = function(request, response) {
   if (parsedURL.pathname !== '/classes/messages' && parsedURL.pathname !== '/classes/room') {
     statusCode = 404;
   } else {
+    var stringifiedBody = '';
+    var body = JSON.parse(fs.readFileSync(__dirname + ('/public/messages.js'), 'utf-8')); //object with data
+
     if (method === 'POST') {
       statusCode = 201;
       request.on('data', (chunk) => {
         var fullString = '';
-        fullString += chunk.toString();
-        var parsed = JSON.parse(fullString);
+        fullString += chunk.toString(); 
+        var parsed = JSON.parse(fullString); 
         parsed.objectId = id();
-        body.results.unshift(parsed);
+        body.results.unshift(parsed); 
       });
       request.on('end', () => { 
         response.writeHead(statusCode, headers);
-        response.end(JSON.stringify(body));
+        stringifiedBody = JSON.stringify(body);
+        fs.writeFileSync(__dirname + ('/public/messages.js'), stringifiedBody, 'utf-8');
+        response.end(stringifiedBody);
       });
-    }
+    } 
     response.writeHead(statusCode, headers);
-    response.end(JSON.stringify(body));
+    response.end(JSON.stringify(body)); 
   }
 
 };
