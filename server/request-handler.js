@@ -1,4 +1,4 @@
-// /*************************************************************
+vvvvi// /*************************************************************
 
 // You should implement your request handler function in this file.
 
@@ -40,7 +40,7 @@ var requestHandler = function(request, response) {
   });
 
   var headers = defaultCorsHeaders;
-  
+
   headers['Content-Type'] = 'application/json';
   var statusCode = 200;
 
@@ -54,20 +54,20 @@ var requestHandler = function(request, response) {
       statusCode = 201;
       request.on('data', (chunk) => {
         var fullString = '';
-        fullString += chunk.toString(); 
-        var parsed = JSON.parse(fullString); 
+        fullString += chunk.toString();
+        var parsed = JSON.parse(fullString);
         parsed.objectId = id();
-        body.results.unshift(parsed); 
+        body.results.unshift(parsed);
       });
-      request.on('end', () => { 
+      request.on('end', () => {
         response.writeHead(statusCode, headers);
         stringifiedBody = JSON.stringify(body);
         fs.writeFileSync(__dirname + ('/public/messages.js'), stringifiedBody, 'utf-8');
         response.end(stringifiedBody);
       });
-    } 
+    }
     response.writeHead(statusCode, headers);
-    response.end(JSON.stringify(body)); 
+    response.end(JSON.stringify(body));
   }
 
 };
